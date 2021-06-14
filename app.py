@@ -173,5 +173,5 @@ bot = IST_bot()
 
 @app.route(f'/{secret}', methods=["POST"])
 def handle_incoming_message():
-    bot.handle_incoming_message()
+    return bot.handle_incoming_message()
 
