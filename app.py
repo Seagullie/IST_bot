@@ -152,6 +152,5 @@ def telegram_webhook():
             onflood_responses[randint(0, len(onflood_responses) - 1)](chat_id)
 
     return "OK"
-    
-    "change from local"
+
 
