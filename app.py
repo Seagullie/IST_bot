@@ -96,7 +96,7 @@ class IST_bot:
     def echo_in_group_chat(self, group_chat_id, message):
         self.bot.sendMessage(group_chat_id, message)
 
-    @app.route(f'/{secret}', methods=["POST"])
+    
     def handle_incoming_message(self):
         update = request.get_json()
 
@@ -170,4 +170,8 @@ class IST_bot:
         return "OK"
 
 bot = IST_bot()
+
+@app.route(f'/{secret}', methods=["POST"])
+def handle_incoming_message():
+    bot.handle_incoming_message()
 
