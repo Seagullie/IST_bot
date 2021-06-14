@@ -8,6 +8,8 @@ from tell_room_number__academy import report_pair_data
 from time import time
 from requests import get
 
+import json 
+
 #proxy stuff
 proxy_url = "http://proxy.server:3128"
 telepot.api._pools = {
@@ -16,9 +18,13 @@ telepot.api._pools = {
 telepot.api._onetime_pool_spec = (urllib3.ProxyManager, dict(proxy_url=proxy_url, num_pools=1, maxsize=1, retries=False, timeout=30))
 #proxy stuff
 
-secret = 123123
-bot = telepot.Bot('1059909995:AAHj400Laz83QuY5pmIEnmE_rseaEup2Ct4')
-bot.setWebhook(f"https://seagullie.pythonanywhere.com/{secret}", max_connections=1)
+credentials = json.load(open("credentials.json"))
+
+secret = credentials["secret"]
+key = credentials["key"]
+bot = telepot.Bot(f'{key}')
+webhook = f"https://seagullie.pythonanywhere.com/{secret}"
+bot.setWebhook(webhook, max_connections=1)
 onflood_responses = [
 lambda chat_id: bot.sendVideo(chat_id, open("ahahaha_u_great.mp4", "rb"))]#lambda chat_id: bot.sendPhoto(chat_id, open("munch_munch_aAaaAAA", "rb")),
 group_chat_id = -1001230414615
