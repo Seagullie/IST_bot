@@ -106,7 +106,7 @@ class IST_bot:
 
             text = update[message_mode]['text'].lower()
             print("to be more precise,", text)
-            if register_message(text, telegram_timestamp) and chat_id in self.special_whitelist:
+            if chat_id in self.special_whitelist and  register_message(text, telegram_timestamp):
                 self.onflood_responses[randint(0, len(self.onflood_responses) - 1)](chat_id)
 
             # if text.lower().startswith("яка ауд") or text.lower().startswith("яка авд"):
