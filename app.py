@@ -116,7 +116,7 @@ class IST_bot:
                 echo = " ".join(update[message_mode]['text'].split(" ")[5::])
                 self.echo_in_group_chat(self.group_chat_id, echo)
 
-            elif text == r"/help@Chaiko_bot".lower():
+            elif text == "/help" or text == r"/help@Chaiko_bot".lower():
                 if chat_id in self.special_whitelist:
                     help_message = self.help_message()
                 else: 
@@ -153,8 +153,6 @@ class IST_bot:
             elif content_type == 'sticker':
                 if register_message(update[message_mode][content_type]['set_name'], telegram_timestamp):
                     choice(self.onflood_responses)(chat_id)
-
-        return "OK"
     
     def get_message_mode(self, incoming_message):
 
@@ -176,7 +174,8 @@ class IST_bot:
         return message_mode
     
     def initiator_in_whitelist(self, chat_id):
-        return chat_id in self.initiator_whitelist
+        # return chat_id in self.initiator_whitelist
+        return True # the open mode
     
     def handle_incoming_message(self):
         update = request.get_json()
@@ -200,7 +199,8 @@ bot = IST_bot()
 @app.route(f'/{secret}', methods=["POST"])
 def handle_incoming_message():
     try:
-        return bot.handle_incoming_message()
+        bot.handle_incoming_message()
+        return "OK"
     except Exception as e:
         print(e)
         return "OK"
