@@ -29,6 +29,8 @@ class IST_bot:
         self.set_proxy()
         self.set_webhook()
         self.group_chat_id = -1001230414615
+        self.owner_chat_id = 689942888
+        self.initiator_whitelist = [self.group_chat_id, self.owner_chat_id]
         
         self.onflood_responses = [
             lambda chat_id: self.bot.sendVideo(chat_id, open("ahahaha_u_great.mp4", "rb"))]
@@ -96,40 +98,15 @@ class IST_bot:
     def echo_in_group_chat(self, group_chat_id, message):
         self.bot.sendMessage(group_chat_id, message)
 
-    
-    def handle_incoming_message(self):
-        update = request.get_json()
-
-        try:
-            content_type, chat_type, chat_id = telepot.glance(update['message'])
-            message_mode = 'message'
-        except KeyError:
-
-            try:
-                content_type, chat_type, chat_id = telepot.glance(update['edited_message'])
-            except KeyError as e:
-                print(e)
-                return "OK"
-
-            message_mode = 'edited_message'
-
-        telegram_timestamp = update[message_mode]['date']
-        self.send_debug_info(update, content_type, chat_type, chat_id)
-
-        #echo_back(update, chat_id)
-
-        if chat_id not in(689942888, -1001230414615) or not self.check_if_recent(update[message_mode]['date']):
-            return "OK"
-
+    def execute_callbacks(self, content_type, telegram_timestamp, chat_id, update, message_mode):
+        
         if content_type == 'text':
             print("the bot got something of type 'text'")
 
             text = update[message_mode]['text'].lower()
             print("to be more precise,", text)
             if register_message(text, telegram_timestamp):
-                #bot.sendMessage(chat_id, "It's time to stop")
                 self.onflood_responses[randint(0, len(self.onflood_responses) - 1)](chat_id)
-
 
             # if text.lower().startswith("яка ауд") or text.lower().startswith("яка авд"):
             #     tell_classroom(chat_id)
@@ -157,21 +134,64 @@ class IST_bot:
 
         elif content_type == 'document':
             if register_message(update[message_mode][content_type]['file_size'], telegram_timestamp):
-                self.onflood_responses[randint(0, len(self.onflood_responses) - 1)](chat_id)
+                choice(self.onflood_responses)(chat_id)
 
         elif content_type == 'photo':
             if register_message(update[message_mode][content_type][0]['file_size'], telegram_timestamp):
-                self.onflood_responses[randint(0, len(self.onflood_responses) - 1)](chat_id)
+                choice(self.onflood_responses)(chat_id)
 
         elif content_type == 'sticker':
             if register_message(update[message_mode][content_type]['set_name'], telegram_timestamp):
-                self.onflood_responses[randint(0, len(self.onflood_responses) - 1)](chat_id)
+                choice(self.onflood_responses)(chat_id)
 
         return "OK"
+    
+    def get_message_mode(self, incoming_message):
+
+        try:
+            # content_type, chat_type, chat_id = telepot.glance(incoming_message['message'])
+            telepot.glance(incoming_message['message'])
+            message_mode = 'message'
+        except KeyError:
+
+            try:
+                # content_type, chat_type, chat_id = telepot.glance(incoming_message['edited_message'])
+                incoming_message['edited_message']
+            except KeyError as e:
+                print(e)
+                return "mode not supported"
+
+            message_mode = 'edited_message'
+            
+        return message_mode
+    
+    def initiator_in_whitelist(self, chat_id):
+        return chat_id in self.initiator_whitelist
+    
+    def handle_incoming_message(self):
+        update = request.get_json()
+        message_mode = self.get_message_mode(update)
+        
+        if message_mode == "mode not supported": return "OK"
+        
+        content_type, chat_type, chat_id = telepot.glance(update['message'])
+
+        telegram_timestamp = update[message_mode]['date']
+        self.send_debug_info(update, content_type, chat_type, chat_id)
+
+        if not self.initiator_in_whitelist(chat_id) or not self.check_if_recent(update[message_mode]['date']):
+            return "OK"
+
+        return self.execute_callbacks(content_type, telegram_timestamp, chat_id, update, message_mode)
+        
 
 bot = IST_bot()
 
 @app.route(f'/{secret}', methods=["POST"])
 def handle_incoming_message():
-    return bot.handle_incoming_message()
+    try:
+        return bot.handle_incoming_message()
+    except Exception as e:
+        print(e)
+        return "OK"
 
