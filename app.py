@@ -31,6 +31,7 @@ class IST_bot:
         self.group_chat_id = -1001230414615
         self.owner_chat_id = 689942888
         self.initiator_whitelist = [self.group_chat_id, self.owner_chat_id]
+        self.special_whitelist = [self.group_chat_id, self.owner_chat_id]
         
         self.onflood_responses = [
             lambda chat_id: self.bot.sendVideo(chat_id, open("ahahaha_u_great.mp4", "rb"))]
@@ -105,7 +106,7 @@ class IST_bot:
 
             text = update[message_mode]['text'].lower()
             print("to be more precise,", text)
-            if register_message(text, telegram_timestamp):
+            if register_message(text, telegram_timestamp) and chat_id in self.special_whitelist:
                 self.onflood_responses[randint(0, len(self.onflood_responses) - 1)](chat_id)
 
             # if text.lower().startswith("яка ауд") or text.lower().startswith("яка авд"):
@@ -115,8 +116,13 @@ class IST_bot:
                 echo = " ".join(update[message_mode]['text'].split(" ")[5::])
                 self.echo_in_group_chat(self.group_chat_id, echo)
 
-            elif text == "/help" or text == r"/help@Chaiko_bot".lower():
-                self.bot.sendMessage(chat_id, self.help_message())
+            elif text == r"/help@Chaiko_bot".lower():
+                if chat_id in self.special_whitelist:
+                    help_message = self.help_message()
+                else: 
+                    help_message = self.help_message() # will handle it in a special way. Not now
+                    
+                self.bot.sendMessage(chat_id, help_message)
 
             elif text == "жопа":
                 responses = ["Ж😯па", "Ж̴̂ ̽͝ ̛̑ ͆͒ ̀͠ ̃̚ ̈́̈́ ̀̂ ̆̄ ̎̇ ̋́ ̢̫о̸̀ ͍͖ ̡̺ ̖͜ ͔̣ ͔̘ ̖̼ ̭̱ ̦̤ ̬̗ ̟̝ ̥͔п̷ ͆͂ ̉̋ ̘̯ ͎̮а̵̓ ͑͂ ̛̃ ̾̏ ̔̾ ́̀ ́͝ ́͗ ̀́ ̈́̒ ̀́ ̈̅ ͗̇ ̓ ̥͙ ̨̺ ̱͖ ̗̝ ͕̞ ͔̲  ͎̝ ̢̠", "жОПа", "ЖОПА", "жОПА", "Ж😮па", "Міш?", "<b>Жопа</b>"]
@@ -132,17 +138,21 @@ class IST_bot:
                 else:
                     self.bot.sendPhoto(chat_id, cat_pic__link)
 
-        elif content_type == 'document':
-            if register_message(update[message_mode][content_type]['file_size'], telegram_timestamp):
-                choice(self.onflood_responses)(chat_id)
+        elif content_type in ['document', 'photo'] and chat_id in self.special_whitelist:
+            
+            file_size = update[message_mode][content_type]['file_size']
+            
+            if content_type == 'document':
+                if register_message(file_size, telegram_timestamp):
+                    choice(self.onflood_responses)(chat_id)
 
-        elif content_type == 'photo':
-            if register_message(update[message_mode][content_type][0]['file_size'], telegram_timestamp):
-                choice(self.onflood_responses)(chat_id)
+            elif content_type == 'photo':
+                if register_message(file_size, telegram_timestamp):
+                    choice(self.onflood_responses)(chat_id)
 
-        elif content_type == 'sticker':
-            if register_message(update[message_mode][content_type]['set_name'], telegram_timestamp):
-                choice(self.onflood_responses)(chat_id)
+            elif content_type == 'sticker':
+                if register_message(update[message_mode][content_type]['set_name'], telegram_timestamp):
+                    choice(self.onflood_responses)(chat_id)
 
         return "OK"
     
